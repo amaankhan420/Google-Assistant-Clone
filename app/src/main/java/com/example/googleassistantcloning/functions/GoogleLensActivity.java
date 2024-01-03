@@ -79,12 +79,12 @@ public class GoogleLensActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item){
         int id=item.getItemId();
         if(id==R.id.addImage){
-            shoeImageImportDialog();
+            showImageImportDialog();
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void shoeImageImportDialog() {
+    private void showImageImportDialog() {
         String[] items={"Camera","Gallery"};
         AlertDialog.Builder dialog=new AlertDialog.Builder(this);
         dialog.setTitle("Select Image");
@@ -106,7 +106,6 @@ public class GoogleLensActivity extends AppCompatActivity {
                     pickGallery();
                 }
             }
-
         });
         dialog.create().show();
     }
@@ -119,9 +118,8 @@ public class GoogleLensActivity extends AppCompatActivity {
         Intent i= new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         i.putExtra(MediaStore.EXTRA_OUTPUT,image_uri);
         startActivityForResult(i,IMAGE_PICK_CAMERA_CODE);
-
-
     }
+
     private void pickGallery() {
         Intent intent = new Intent (Intent.ACTION_PICK);
         intent.setType("image/*");
@@ -173,7 +171,6 @@ public class GoogleLensActivity extends AppCompatActivity {
 
                     } else {
                         Toast.makeText(this, "PERMISSION DENIED", Toast.LENGTH_SHORT).show();
-
                     }
                 }
                 break;

@@ -13,6 +13,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.database.Cursor
 import android.graphics.Bitmap
+import android.hardware.Camera
 import android.hardware.camera2.CameraManager
 import android.media.Ringtone
 import android.net.Uri
@@ -54,7 +55,6 @@ class AssistantFunctions {
         var READCONTACTS = 6
         var CAPTUREPHOTO = 7
         var imageIndex: Int = 0
-        private val REQUEST_BLUETOOTH_PERMISSION = 1
         var REQUEST_CODE_SELECT_DOC: Int = 100
         var REQUEST_ENABLE_BT = 1000
         var questions: List<String> = listOf(" What would you name your boat if you had one? ",
@@ -346,6 +346,10 @@ class AssistantFunctions {
             }
         }
 
+        fun takeSelfie() {
+
+        }
+
         @SuppressLint("MissingPermission")
         fun turnOnBluetooth(activity: Activity, textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String) {
             if (!bluetoothAdapter.isEnabled) {
@@ -432,7 +436,7 @@ class AssistantFunctions {
             }
         }
 
-        fun capturePhoto(activity: Activity, context: Context, textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String) {
+        fun capturePhoto(activity: Activity, context: Context, textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String, useFrontCamera: Boolean = false) {
             if (ContextCompat.checkSelfPermission(
                             context,
                             Manifest.permission.CAMERA) != PERMISSION_GRANTED) {
@@ -454,6 +458,10 @@ class AssistantFunctions {
                 }
                 val outputFileUri = Uri.fromFile(newFile)
                 val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+
+                if (useFrontCamera) {
+                    cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", Camera.CameraInfo.CAMERA_FACING_FRONT)
+                }
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri)
                 activity.startActivity(cameraIntent)
                 speak("Photo will be saved to $file", textToSpeech, assistantViewModel, keeper)

@@ -9,7 +9,6 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -102,7 +101,7 @@ class ExploreActivity : AppCompatActivity() {
             dialog.show()
         }
 
-        var city = ""
+        var city = "Mumbai"
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
