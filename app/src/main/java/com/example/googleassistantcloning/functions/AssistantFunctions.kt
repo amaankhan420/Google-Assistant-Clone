@@ -28,6 +28,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import com.example.googleassistantcloning.assistant.AssistantViewModel
 import com.example.googleassistantcloning.utils.UiUtils.logKeeper
 import com.google.mlkit.vision.common.InputImage
@@ -149,10 +150,12 @@ class AssistantFunctions {
             intent.let { activity.startActivity(it) }
         }
 
+        fun messagingOnWhatsApp() {
+
+        }
         fun openWhatsAPP(activity: Activity) {
             val intent = activity.packageManager.getLaunchIntentForPackage("com.whatsapp")
             intent.let { activity.startActivity(it) }
-
         }
 
         fun openMessages(activity: Activity, context: Context) {
@@ -183,6 +186,55 @@ class AssistantFunctions {
 
             }
 
+        }
+
+        fun extractAndSendMessage(activity: Activity, textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String) {
+            val regex = Regex("send message on WhatsApp\\s+(.+)\\s+to\\s+(.+)")
+            val matchResult = regex.find(keeper)
+
+            if (matchResult != null && matchResult.groupValues.size == 3) {
+                val message = matchResult.groupValues[1]
+                val contactName = matchResult.groupValues[2]
+                val contactNumber = getContactNumber(activity, contactName)
+                if (contactNumber.isNotEmpty()) {
+                    openWhatsAppWithMessage(activity, contactNumber, message)
+                } else {
+                    speak("Contact not found", textToSpeech, assistantViewModel, keeper)
+                }
+            } else {
+                speak("Invalid input format", textToSpeech, assistantViewModel, keeper)
+            }
+        }
+
+        private fun openWhatsAppWithMessage(activity: Activity, contactNumber: String, message: String) : Boolean {
+            val intent = Intent(Intent.ACTION_VIEW)
+
+            val uri = "whatsapp://send?phone=$contactNumber"
+
+            intent.data = Uri.parse("$uri&text=${Uri.encode(message)}")
+
+            return if (intent.resolveActivity(activity.packageManager) != null) {
+                activity.startActivity(intent)
+                true
+            } else {
+                false
+            }
+        }
+
+        @SuppressLint("Range")
+        private fun getContactNumber(activity: Activity, name: String): String {
+            var number = ""
+            val phones: Cursor = activity.contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null)!!
+
+            while (phones.moveToNext()) {
+                val contactName: String = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)).toLowerCase()
+                if (contactName.contains(name.toLowerCase())) {
+                    number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                    break
+                }
+            }
+            phones.close()
+            return number
         }
 
         fun shareAFile(activity: Activity, context: Context) {
@@ -307,7 +359,6 @@ class AssistantFunctions {
                 val name = keeper.split("call").toTypedArray()[1].trim {
                     it <= ' '
                 }
-                Log.d("check", name)
                 try {
                     val phones: Cursor = activity.contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null)!!
                     while (phones.moveToNext()) {
@@ -315,7 +366,6 @@ class AssistantFunctions {
                         contactName=contactName.toLowerCase()
                         if (contactName.contains(name.toLowerCase())) {
                             number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                            Log.d("number", number)
                         }
                     }
                     phones.close()
@@ -332,22 +382,16 @@ class AssistantFunctions {
                             val dial = "tel:$number"
                             speak("Calling now", textToSpeech, assistantViewModel, keeper)
                             activity.startActivity(Intent(Intent.ACTION_CALL, Uri.parse(dial)))
-
                         }
                     } else {
                         speak("Wrong Contact Name", textToSpeech, assistantViewModel, keeper)
                     }
-
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Log.d("error in call", e.message.toString())
                     speak("Something went wrong", textToSpeech, assistantViewModel, keeper)
                 }
             }
-        }
-
-        fun takeSelfie() {
-
         }
 
         @SuppressLint("MissingPermission")
@@ -392,8 +436,6 @@ class AssistantFunctions {
             } else {
                 speak("Turn on Bluetooth to get paired devices", textToSpeech, assistantViewModel, keeper)
             }
-
-
         }
 
         fun turnOnFlash(cameraManager: CameraManager, cameraID: String, textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String) {
@@ -461,7 +503,10 @@ class AssistantFunctions {
 
                 if (useFrontCamera) {
                     cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", Camera.CameraInfo.CAMERA_FACING_FRONT)
+                } else {
+                    cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", Camera.CameraInfo.CAMERA_FACING_BACK)
                 }
+
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri)
                 activity.startActivity(cameraIntent)
                 speak("Photo will be saved to $file", textToSpeech, assistantViewModel, keeper)

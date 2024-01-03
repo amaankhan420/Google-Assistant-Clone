@@ -45,6 +45,7 @@ import com.example.googleassistantcloning.functions.AssistantFunctions.Companion
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.capturePhoto
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.clipBoardCopy
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.clipBoardSpeak
+import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.extractAndSendMessage
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.getAllPairedDevices
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.getDate
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.getTextFromBitmap
@@ -165,6 +166,7 @@ class AssistantActivity : AppCompatActivity() {
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
             speechRecognizer.setRecognitionListener(object : RecognitionListener {
                 override fun onReadyForSpeech(params: Bundle?) {}
+
                 override fun onBeginningOfSpeech() {
                     Log.d(logSR, "started")
                 }
@@ -209,9 +211,11 @@ class AssistantActivity : AppCompatActivity() {
                             keeper.contains("open facebook") || keeper.contains("open Facebook") || keeper.contains("open Face") || keeper.contains("open Facebook") -> openFacebook(this@AssistantActivity)
                             keeper.contains("open messages") -> openMessages(this@AssistantActivity, applicationContext)
                             keeper.contains("how to use google assistant") || keeper.contains("google assistant") || keeper.contains("how to use") || keeper.contains("can I do") || keeper.contains("what can I do") || keeper.contains("Google assistant") || keeper.contains("can")-> speak("Try some Commands : open whatsapp , open facebook , tell me a joke , hi , hello , explore , google lens", textToSpeech, assistantViewModel, keeper)
+                            keeper.contains("how to send message on WhatsApp") || keeper.contains("how to message on WhatsApp") || keeper.contains("how to use WhatsApp from here") -> speak("Speak in this format 'Send message on WhatsApp (followed by your message) to (contact name which is available)'", textToSpeech, assistantViewModel, keeper)
                             keeper.contains("open youtube") || keeper.contains("open YouTube") -> openYoutube(this@AssistantActivity)
                             keeper.contains("share file") -> shareAFile(this@AssistantActivity, applicationContext)
                             keeper.contains("share a text message") -> shareATextMessage(this@AssistantActivity, applicationContext, textToSpeech, assistantViewModel, keeper)
+                            keeper.contains("send message on WhatsApp") -> extractAndSendMessage(this@AssistantActivity, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("call") -> callContact(this@AssistantActivity, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("turn on bluetooth") || keeper.contains("turn on Bluetooth") -> turnOnBluetooth(this@AssistantActivity, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("turn off bluetooth") || keeper.contains("turn off Bluetooth") -> turnOffBluetooth(textToSpeech, assistantViewModel, keeper)
@@ -220,8 +224,8 @@ class AssistantActivity : AppCompatActivity() {
                             keeper.contains("turn off flash") -> turnOffFlash(cameraManager, cameraID, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("copy to clipboard") || keeper.contains("copy") -> clipBoardCopy(clipboardManager, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("read last clipboard")|| keeper.contains("read my clipboard") || keeper.contains("read clipboard")-> clipBoardSpeak(clipboardManager, textToSpeech, assistantViewModel, keeper)
-                            keeper.contains("capture photo") -> capturePhoto(this@AssistantActivity, applicationContext, textToSpeech, assistantViewModel, keeper, false)
-                            keeper.contains("capture selfie") || keeper.contains("take selfie") || keeper.contains("selfie") -> capturePhoto(this@AssistantActivity, applicationContext, textToSpeech, assistantViewModel, keeper, true)
+                            keeper.contains("capture photo") || keeper.contains("take photo") || keeper.contains("click photo") || keeper.contains("open back camera") -> capturePhoto(this@AssistantActivity, applicationContext, textToSpeech, assistantViewModel, keeper, false)
+                            keeper.contains("capture selfie") || keeper.contains("take selfie") || keeper.contains("click selfie") || keeper.contains("open front camera") -> capturePhoto(this@AssistantActivity, applicationContext, textToSpeech, assistantViewModel, keeper, true)
                             keeper.contains("play ringtone") ||  keeper.contains("play something") ||  keeper.contains("play")||  keeper.contains("song")-> playRingtone(ringnote, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("stop ringtone") || keeper.contains("stop playing") || keeper.contains("stop music") || keeper.contains("stop") || keeper.contains("stop ringtone") -> stopRingtone(ringnote, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("read me") -> readMe(this@AssistantActivity)
@@ -234,7 +238,7 @@ class AssistantActivity : AppCompatActivity() {
                             keeper.contains("are you married") || keeper.contains("married") ||   keeper.contains("marry") -> speak("Yes to my work !", textToSpeech, assistantViewModel, keeper)
                             keeper.contains("boat") || keeper.contains("real magic") || keeper.contains("magic") || keeper.contains("useless talent") || keeper.contains("smelling place") || keeper.contains("smelling ") -> speak("You are funny haha", textToSpeech, assistantViewModel, keeper)
                             keeper.contains("what is your name") || keeper.contains("your name") || keeper.contains("what do you call your self") || keeper.contains("who are you") -> speak("I am Google Assistant at  your service", textToSpeech, assistantViewModel, keeper)
-                            keeper.contains("hello") || keeper.contains("hi") || keeper.contains("hey") || keeper.contains("hay") -> speak("Hello , how can I help you ?", textToSpeech, assistantViewModel, keeper)
+                            keeper.startsWith("hello") || keeper == "hi" || keeper.startsWith("hey") -> speak("Hello , how can I help you ?", textToSpeech, assistantViewModel, keeper)
                             else -> speak("Please try another comment like  what is your name , call someone , read my sms , open google lens , explore", textToSpeech, assistantViewModel, keeper)
                         }
                     }
