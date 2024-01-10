@@ -5,8 +5,13 @@ plugins {
 }
 
 buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
     dependencies{
-        classpath("com.android.tools.build:gradle:8.1.2")
+        classpath("com.android.tools.build:gradle:8.1.4")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.0-Beta2")
         classpath("com.google.gms:google-services:4.4.0")
         classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4")

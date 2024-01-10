@@ -8,8 +8,8 @@ import androidx.room.PrimaryKey
 data class Assistant (
     @PrimaryKey(autoGenerate = true)
     var assistantId: Long=0L,
-            @ColumnInfo(name = "assistant_message")
-            var assistant_message:String = "DEFAULT_MESSAGE",
-               @ColumnInfo(name = "human_message")
-                    var human_message : String = "DEFAULT_MESSAGE"
+    @ColumnInfo(name = "assistant_message")
+    var assistant_message:String = "DEFAULT_MESSAGE",
+    @ColumnInfo(name = "human_message")
+    var human_message : String = "DEFAULT_MESSAGE"
 )

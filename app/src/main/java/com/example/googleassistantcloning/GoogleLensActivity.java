@@ -1,4 +1,4 @@
-package com.example.googleassistantcloning.functions;
+package com.example.googleassistantcloning;
 
 import android.Manifest;
 import android.content.ContentValues;
@@ -25,7 +25,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.googleassistantcloning.*;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
@@ -51,6 +50,7 @@ public class GoogleLensActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_google_lens);
         ActionBar actionBar=getSupportActionBar();
+        assert actionBar != null;
         actionBar.setSubtitle("Insert or Click Photos");
         mResultEt=findViewById(R.id.resultedt);
         mPreviewIv=findViewById(R.id.ImageViewpre);

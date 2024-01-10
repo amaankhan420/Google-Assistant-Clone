@@ -1,18 +1,21 @@
 package com.example.googleassistantcloning
 
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.googleassistantcloning.assistant.AssistantActivity
-import com.example.googleassistantcloning.assistant.ExploreActivity
-import com.example.googleassistantcloning.functions.GoogleLensActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.googleassistantcloning.utils.UiUtils.setCustomActionBar
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -20,8 +23,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var  hiGoogle : ImageView
     private lateinit var  googleLens : ImageView
     private lateinit var  explore : ImageView
+    private lateinit var scaleUp: Animation
+    private lateinit var scaleDown: Animation
+    private lateinit var moveUpAndFadeOut: Animation
     private val Record_Audio_Request_Code:Int=1
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -29,25 +36,87 @@ class MainActivity : AppCompatActivity() {
         imageView = findViewById(R.id.action_button)
         googleLens= findViewById(R.id.action_google_lens)
         explore = findViewById(R.id.action_explore)
-        hiGoogle= findViewById(R.id.hiGoogle)
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.RECORD_AUDIO) != PERMISSION_GRANTED) {
+        hiGoogle = findViewById(R.id.hiGoogle)
+        scaleUp = AnimationUtils.loadAnimation(this, R.anim.scale_up)
+        scaleDown = AnimationUtils.loadAnimation(this, R.anim.scale_down)
+        moveUpAndFadeOut = AnimationUtils.loadAnimation(this, R.anim.move_up_and_fade_out)
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PERMISSION_GRANTED) {
             checkPermission()
-        }
-        imageView.setOnClickListener {
-            startActivity(Intent(this, AssistantActivity::class.java))
         }
 
         hiGoogle.setOnClickListener {
-            startActivity(Intent(this, AssistantActivity::class.java))
+            moveUpAndFadeOut.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {
+                    lifecycleScope.launch {
+                        delay(220)
+                        startActivity(Intent(this@MainActivity, AssistantActivity::class.java))
+                    }
+                }
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    hiGoogle.clearAnimation()
+                }
+            })
+            hiGoogle.startAnimation(moveUpAndFadeOut)
         }
 
-        googleLens.setOnClickListener {
-            startActivity(Intent(this, GoogleLensActivity::class.java))
+        imageView.setOnClickListener {
+            scaleUp.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    imageView.startAnimation(scaleDown)
+                }
+            })
+            imageView.startAnimation(scaleUp)
+            scaleDown.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    startActivity(Intent(this@MainActivity, AssistantActivity::class.java))
+                }
+            })
         }
 
-        explore.setOnClickListener {
-            startActivity(Intent(this, ExploreActivity::class.java))
+        googleLens.setOnClickListener{
+            scaleUp.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    googleLens.startAnimation(scaleDown)
+                }
+            })
+
+            googleLens.startAnimation(scaleUp)
+
+            scaleDown.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    startActivity(Intent(this@MainActivity, GoogleLensActivity::class.java))
+                }
+            })
+        }
+
+        explore.setOnClickListener{
+            scaleUp.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    explore.startAnimation(scaleDown)
+                }
+            })
+
+            explore.startAnimation(scaleUp)
+
+            scaleDown.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    startActivity(Intent(this@MainActivity, ExploreActivity::class.java))
+                }
+            })
         }
     }
 

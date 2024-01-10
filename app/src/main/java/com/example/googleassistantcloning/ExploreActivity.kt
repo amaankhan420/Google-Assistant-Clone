@@ -1,14 +1,17 @@
-package com.example.googleassistantcloning.assistant
+package com.example.googleassistantcloning
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.AnimationDrawable
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -19,8 +22,6 @@ import androidx.core.content.ContextCompat
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.example.googleassistantcloning.R
-import com.example.googleassistantcloning.MainActivity
 import com.example.googleassistantcloning.utils.UiUtils
 import com.example.googleassistantcloning.utils.UiUtils.Commands
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -29,18 +30,22 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import org.json.JSONObject
 import java.io.IOException
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.roundToInt
 
 
+@Suppress("DEPRECATED_IDENTITY_EQUALS")
 class ExploreActivity : AppCompatActivity() {
-    val apiKey = "5b61571e06a9ceaaaa9169003fe5d343"
-    var baseUrl = "https://api.openweathermap.org/data/2.5/weather"
+    private val apiKey = "5b61571e06a9ceaaaa9169003fe5d343"
+    private var baseUrl = "https://api.openweathermap.org/data/2.5/weather"
 
     private lateinit var textView: TextView
     private lateinit var greetings: TextView
     private lateinit var today: TextView
     private lateinit var wind: TextView
+    private lateinit var weatherLayout: LinearLayout
     private lateinit var cardViewWeather: CardView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,11 +53,17 @@ class ExploreActivity : AppCompatActivity() {
         setContentView(R.layout.activity_explore)
         UiUtils.setCustomActionBar(supportActionBar, this)
         textView = findViewById(R.id.textView)
+        weatherLayout = findViewById(R.id.weather_layout)
         greetings = findViewById(R.id.greetings)
         today = findViewById(R.id.today)
         wind = findViewById(R.id.wind)
         cardViewWeather = findViewById(R.id.weatherCardView)
         val chipGroup: ChipGroup =findViewById(R.id.chipsCommand)
+
+        val animationDrawable = weatherLayout.background as AnimationDrawable
+        animationDrawable.setEnterFadeDuration(2500)
+        animationDrawable.setExitFadeDuration(5000)
+        animationDrawable.start()
 
         if (ContextCompat.checkSelfPermission(this@ExploreActivity,
                         Manifest.permission.ACCESS_FINE_LOCATION) !==
@@ -70,8 +81,8 @@ class ExploreActivity : AppCompatActivity() {
         for (command in Commands) {
             val chip = Chip(this)
             chip.text = command.toString()
-            chip.setButtonDrawable(R.drawable.shape)
             chip.setPadding(25, 10, 25, 10)
+            chip.textAlignment = View.TEXT_ALIGNMENT_CENTER
             chipGroup.addView(chip)
         }
 
@@ -110,6 +121,8 @@ class ExploreActivity : AppCompatActivity() {
                     val longitude = location.longitude
                     city = getCityFromCoordinates(latitude, longitude)
                     obtainLocation(city)
+                } else {
+                    Toast.makeText(this, "Unable to fetch location, using default", Toast.LENGTH_LONG).show()
                 }
             }
 
@@ -119,7 +132,14 @@ class ExploreActivity : AppCompatActivity() {
 
         val c: Calendar = Calendar.getInstance()
         val currentDate = c.time
-        today.text = "Today | " + currentDate.toString()
+
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+        val formattedDate = dateFormat.format(currentDate)
+        val formattedTime = timeFormat.format(currentDate)
+
+        today.text = "Today | Date: $formattedDate | Time: $formattedTime"
 
         when (c.get(Calendar.HOUR_OF_DAY)) {
             in 0..11 -> {
@@ -144,7 +164,6 @@ class ExploreActivity : AppCompatActivity() {
             if (addresses != null) {
                 if (addresses.isNotEmpty()) {
                     val city = addresses[0].locality
-
                     if (city != null) {
                         return city
                     }
@@ -153,7 +172,7 @@ class ExploreActivity : AppCompatActivity() {
         } catch (e: IOException) {
             e.printStackTrace()
         }
-        return "mumbai"
+        return "Mumbai"
     }
 
     private fun obtainLocation(city: String) {
@@ -166,7 +185,7 @@ class ExploreActivity : AppCompatActivity() {
                 val arr2 = obj.getJSONObject("main")
                 val description = arr.getJSONObject(0).getString("description").capitalize()
                 val temp = arr2.getDouble("temp") - 273.15
-                val tempString = String.format("%.2f°C", temp)
+                val tempString = String.format("${temp.roundToInt()}°C")
                 textView.text = "$tempString $city"
                 wind.text = description
             },

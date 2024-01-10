@@ -1,7 +1,8 @@
-package com.example.googleassistantcloning.assistant
+package com.example.googleassistantcloning
 
 
 import android.animation.Animator
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.ClipboardManager
 import android.content.Intent
@@ -20,15 +21,17 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.util.TypedValue
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewTreeObserver
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
-import com.example.googleassistantcloning.R
+import com.example.googleassistantcloning.assistant.AssistantAdapter
+import com.example.googleassistantcloning.assistant.AssistantViewModel
+import com.example.googleassistantcloning.assistant.AssistantViewModelFactory
 import com.example.googleassistantcloning.data.AssistantDatabase
 import com.example.googleassistantcloning.databinding.ActivityAssistantBinding
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.Animation_TIME
@@ -74,7 +77,6 @@ import com.example.googleassistantcloning.functions.AssistantFunctions.Companion
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.turnOffFlash
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.turnOnBluetooth
 import com.example.googleassistantcloning.functions.AssistantFunctions.Companion.turnOnFlash
-import com.example.googleassistantcloning.functions.GoogleLensActivity
 import com.example.googleassistantcloning.utils.UiUtils.*
 import com.kwabenaberko.openweathermaplib.implementation.OpenWeatherMapHelper
 import com.theartofdev.edmodo.cropper.CropImage
@@ -84,6 +86,7 @@ import java.io.FileNotFoundException
 import java.util.*
 
 
+@Suppress("DEPRECATION", "DEPRECATION")
 class AssistantActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAssistantBinding
     private lateinit var assistantViewModel: AssistantViewModel
@@ -94,8 +97,9 @@ class AssistantActivity : AppCompatActivity() {
     private lateinit var cameraManager: CameraManager
     private lateinit var clipboardManager: ClipboardManager
     private lateinit var cameraID: String
-    private lateinit var ringnote: Ringtone
+    private lateinit var ringtone: Ringtone
     private lateinit var imageuri: Uri
+
     private lateinit var helper: OpenWeatherMapHelper
 
     @SuppressLint("ClickableViewAccessibility")
@@ -105,7 +109,7 @@ class AssistantActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_assistant)
         setCustomActionBar(supportActionBar, this)
         if (Settings.System.canWrite(this)) {
-            ringnote = RingtoneManager.getRingtone(applicationContext, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE))
+            ringtone = RingtoneManager.getRingtone(applicationContext, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE))
         }
         else {
             val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
@@ -116,7 +120,7 @@ class AssistantActivity : AppCompatActivity() {
         val application = requireNotNull(this).application
         val dataSource = AssistantDatabase.getInstance(this).assistantDao
         val viewModelFactory = AssistantViewModelFactory(dataSource, application)
-        assistantViewModel = ViewModelProvider(this, viewModelFactory).get(AssistantViewModel::class.java)
+        assistantViewModel = ViewModelProvider(this, viewModelFactory)[AssistantViewModel::class.java]
         val adapter = AssistantAdapter()
         binding.recylerView.adapter = adapter
         assistantViewModel.messages.observe(this) {
@@ -133,11 +137,11 @@ class AssistantActivity : AppCompatActivity() {
                 viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
                     override fun onGlobalLayout() {
                         circularRevealActivity()
-                        binding.assistantConstraintLayout.viewTreeObserver
-                                .removeOnGlobalLayoutListener(this)
+                        binding.assistantConstraintLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
                     }
                 })
             }
+
             cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
             try {
                 cameraID = cameraManager.cameraIdList[0]
@@ -180,7 +184,6 @@ class AssistantActivity : AppCompatActivity() {
                 }
 
                 override fun onEndOfSpeech() {
-                    Log.d(logSR, "ended")
                 }
 
                 override fun onError(error: Int) {
@@ -188,12 +191,9 @@ class AssistantActivity : AppCompatActivity() {
                 }
 
                 override fun onResults(bundles: Bundle?) {
-                    Log.d("result", bundles.toString())
                     val data = bundles!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     if (data != null) {
                         keeper = data[0]
-                        Log.d("result", keeper)
-                        Log.d(logKeeper, keeper)
                         when {
                             keeper.contains("thanks") -> speak("Its my job , let me know if there is something else", textToSpeech, assistantViewModel, keeper)
                             keeper.contains("search") -> search(this@AssistantActivity,keeper)
@@ -226,8 +226,8 @@ class AssistantActivity : AppCompatActivity() {
                             keeper.contains("read last clipboard")|| keeper.contains("read my clipboard") || keeper.contains("read clipboard")-> clipBoardSpeak(clipboardManager, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("capture photo") || keeper.contains("take photo") || keeper.contains("click photo") || keeper.contains("open back camera") -> capturePhoto(this@AssistantActivity, applicationContext, textToSpeech, assistantViewModel, keeper, false)
                             keeper.contains("capture selfie") || keeper.contains("take selfie") || keeper.contains("click selfie") || keeper.contains("open front camera") -> capturePhoto(this@AssistantActivity, applicationContext, textToSpeech, assistantViewModel, keeper, true)
-                            keeper.contains("play ringtone") ||  keeper.contains("play something") ||  keeper.contains("play")||  keeper.contains("song")-> playRingtone(ringnote, textToSpeech, assistantViewModel, keeper)
-                            keeper.contains("stop ringtone") || keeper.contains("stop playing") || keeper.contains("stop music") || keeper.contains("stop") || keeper.contains("stop ringtone") -> stopRingtone(ringnote, textToSpeech, assistantViewModel, keeper)
+                            keeper.contains("play ringtone") ||  keeper.contains("play something") ||  keeper.contains("play")||  keeper.contains("song")-> playRingtone(ringtone, textToSpeech, assistantViewModel, keeper)
+                            keeper.contains("stop ringtone") || keeper.contains("stop playing") || keeper.contains("stop music") || keeper.contains("stop") || keeper.contains("stop ringtone") -> stopRingtone(ringtone, textToSpeech, assistantViewModel, keeper)
                             keeper.contains("read me") -> readMe(this@AssistantActivity)
                             keeper.contains("weather") || keeper.contains("explore")|| keeper.contains("Explore")|| keeper.contains("Commands")|| keeper.contains("commands")-> startActivity(Intent(this@AssistantActivity, ExploreActivity::class.java))
                             keeper.contains("lens")||keeper.contains("Lens")||keeper.contains("len")-> startActivity(Intent(this@AssistantActivity, GoogleLensActivity::class.java))
@@ -252,21 +252,34 @@ class AssistantActivity : AppCompatActivity() {
 
                 }
             })
-            binding.assistantAction.setOnTouchListener { _, motionEvent ->
-                when (motionEvent.action) {
-                    MotionEvent.ACTION_UP -> {
-                        speechRecognizer.stopListening()
-                    }
 
-                    MotionEvent.ACTION_DOWN -> {
-                        textToSpeech.stop()
-                        speechRecognizer.startListening(recognizerIntent)
-                    }
+            var listening = false
+            binding.assistantAction.setOnClickListener {
+                listening = !listening
+                if (listening) {
+                    speechRecognizer.startListening(recognizerIntent)
+                    startRippleAnimation(binding.assistantAction)
+                } else {
+                    stopRippleAnimation(binding.assistantAction)
+                    speechRecognizer.stopListening()
                 }
-                false
             }
             checkSpeechRecognizerAvailable()
         }
+    }
+
+    private fun startRippleAnimation(imageView: ImageView) {
+        val animator = ObjectAnimator.ofFloat(imageView, "alpha", 1f, 0.5f, 1f)
+        animator.repeatCount = ObjectAnimator.INFINITE
+        animator.setDuration(500)
+        animator.start()
+        imageView.setTag(R.id.ripple_animator, animator)
+    }
+
+    private fun stopRippleAnimation(imageView: ImageView) {
+        val animator = imageView.getTag(R.id.ripple_animator) as? ObjectAnimator
+        animator?.cancel()
+        imageView.alpha = 1.0f
     }
 
     private fun checkSpeechRecognizerAvailable() {
@@ -363,17 +376,13 @@ class AssistantActivity : AppCompatActivity() {
     }
 
     private fun startCrop(imageUri: Uri) {
-        CropImage.activity(imageUri).setGuidelines(CropImageView.Guidelines.ON).setMultiTouchEnabled(true)
-                .start(this)
+        CropImage.activity(imageUri).setGuidelines(CropImageView.Guidelines.ON).setMultiTouchEnabled(true).start(this)
     }
 
     private fun circularRevealActivity() {
         val cx: Int = binding.assistantConstraintLayout.right - getDips(Dips)
         val cy: Int = binding.assistantConstraintLayout.bottom - getDips(Dips)
-        val finalRadius: Int = Math.max(
-                binding.assistantConstraintLayout.width,
-                binding.assistantConstraintLayout.height
-        )
+        val finalRadius: Int = binding.assistantConstraintLayout.width.coerceAtLeast(binding.assistantConstraintLayout.height)
         val circularReveal = ViewAnimationUtils.createCircularReveal(
                 binding.assistantConstraintLayout,
                 cx,
@@ -401,10 +410,8 @@ class AssistantActivity : AppCompatActivity() {
         super.onBackPressed()
         val cx: Int = binding.assistantConstraintLayout.width - getDips(Dips)
         val cy = binding.assistantConstraintLayout.height - getDips(Dips)
-        val finalRadius: Int = Math.max(
-                binding.assistantConstraintLayout.width,
-                binding.assistantConstraintLayout.height
-        )
+        val finalRadius: Int =
+            binding.assistantConstraintLayout.width.coerceAtLeast(binding.assistantConstraintLayout.height)
         val circularReveal = ViewAnimationUtils.createCircularReveal(binding.assistantConstraintLayout, cx, cy, finalRadius.toFloat(), 0f)
         circularReveal.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator) {}

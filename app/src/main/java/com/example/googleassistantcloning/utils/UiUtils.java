@@ -14,8 +14,8 @@ import com.example.googleassistantcloning.R;
 
 
 public class UiUtils {
-        public static final String[] Commands = {"check my mail","what can i do","can we date","how to use google assistant","hey ", "for example : search assistant","explore","how to use google assistant","hi","hello","thanks","welcome","clear","date","time","dial","send SMS", "send sms", "joke", "tell me a joke"
-        ,"ask me fun questions", "open Whatsapp" , "open Facebook" , "open Gmail", "open Youtube" , "open  GoogleMaps" , "open Google",
+        public static final String[] Commands = {"how to send message on WhatsApp", "check my mail","what can i do","can we date","how to use google assistant","hey ", "for example : search assistant","explore","how to use google assistant","hi","hello","thanks","welcome","clear","date","time","dial","send SMS", "send sms", "joke", "tell me a joke"
+        ,"ask me fun questions", "click selfie","open Whatsapp" , "open Facebook" , "open Gmail", "open Youtube" , "open  GoogleMaps" , "open Google",
         "turn on Bluetooth" , "For example : call mum or call papa ",  "dial" , "turn off Bluetooth" , "turn on Flash" , "turn off Flash","capture photo" , "any thoughts",
                 "play ringtone","stop ringtone","are you married","haha","read me","read my last sms","share file","share a text message that your message",
         "get bluetooth devices","copy to clipboard","read last clipboard","open google lens","explore","what is your name" , "play some music",
@@ -28,7 +28,6 @@ public class UiUtils {
 
         public static void setCustomActionBar(ActionBar supportActionBar, Context context) {
                 if (supportActionBar != null) {
-                        Log.d("UiUtils", "ActionBar is here");
                         supportActionBar.setDisplayShowHomeEnabled(true);
                         supportActionBar.setDisplayShowTitleEnabled(false);
                         LayoutInflater mInflater = LayoutInflater.from(context);
@@ -38,9 +37,5 @@ public class UiUtils {
                 } else {
                         Log.e("UiUtils", "ActionBar is null");
                 }
-        }
-
-        public static void setCustomActionBarFragment(Fragment fragment, Context context) {
-                setCustomActionBar( ((AppCompatActivity) fragment.requireActivity()).getSupportActionBar(), context);
         }
 }

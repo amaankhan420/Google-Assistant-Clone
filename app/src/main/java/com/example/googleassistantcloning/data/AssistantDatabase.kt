@@ -29,7 +29,6 @@ abstract class AssistantDatabase  : RoomDatabase() {
                     INSTANCE = instance
                 }
                 return instance
-
             }
         }
     }

@@ -9,12 +9,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.hardware.Camera
 import android.hardware.camera2.CameraManager
+import android.media.MediaRecorder
 import android.media.Ringtone
 import android.net.Uri
 import android.os.Environment
@@ -28,19 +28,18 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
 import com.example.googleassistantcloning.assistant.AssistantViewModel
 import com.example.googleassistantcloning.utils.UiUtils.logKeeper
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.ml.quaterion.text2summary.Text2Summary
+import com.theartofdev.edmodo.cropper.CropImage
 import java.io.File
 import java.io.IOException
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import com.ml.quaterion.text2summary.Text2Summary
-import com.theartofdev.edmodo.cropper.CropImage
 
 
 @Suppress("DEPRECATION")
@@ -49,21 +48,22 @@ class AssistantFunctions {
         var Dips = 44
         var Animation_TIME = 10
         var REQUEST_CALL = 1
-        var SENDSMS = 2
+        private var SENDSMS = 2
         var READSMS = 3
         var SHAREAFILE = 4
         var SHAREATEXTFILE = 5
         var READCONTACTS = 6
         var CAPTUREPHOTO = 7
-        var imageIndex: Int = 0
+        private var imageIndex: Int = 0
         var REQUEST_CODE_SELECT_DOC: Int = 100
         var REQUEST_ENABLE_BT = 1000
-        var questions: List<String> = listOf(" What would you name your boat if you had one? ",
-                "What's the closest thing to real magic?",
-                "Who is the messiest person you know?",
-                " What will finally break the internet? ",
-                " What's the most useless talent you have?",
-                " Where is the worst smelling place you've been?"
+        private var questions: List<String> = listOf(
+            "What would you name your boat if you had one? ",
+            "What's the closest thing to real magic?",
+            "Who is the messiest person you know?",
+            "What will finally break the internet? ",
+            "What's the most useless talent you have?",
+            "Where is the worst smelling place you've been?"
         )
 
         private val jokes: List<String> = listOf(
@@ -108,10 +108,11 @@ class AssistantFunctions {
 
         private val imageDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + "/assistant/"
         private var bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        private var mediaRecorder: MediaRecorder? = null
 
         fun speak(message: String, textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String) {
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, "")
-            assistantViewModel.sendMessageToDatabase(keeper, message)
+            assistantViewModel.sendMessageToDatabase(message, keeper)
         }
 
         fun getDate(textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String) {
@@ -150,9 +151,6 @@ class AssistantFunctions {
             intent.let { activity.startActivity(it) }
         }
 
-        fun messagingOnWhatsApp() {
-
-        }
         fun openWhatsAPP(activity: Activity) {
             val intent = activity.packageManager.getLaunchIntentForPackage("com.whatsapp")
             intent.let { activity.startActivity(it) }
@@ -331,7 +329,6 @@ class AssistantFunctions {
                         Log.d("error in call", e.message.toString())
                         speak("Something went wrong", textToSpeech, assistantViewModel, keeper)
                     }
-
                 }
             } else {
                 speak("Dial Correct Phone Number", textToSpeech, assistantViewModel, keeper)
@@ -339,7 +336,8 @@ class AssistantFunctions {
         }
 
         fun search(activity: Activity, keeper: String) {
-            val uri = Uri.parse("https://www.google.com/search?q=$keeper")
+            val searchTerm = keeper.trimStart().removePrefix("search")
+            val uri = Uri.parse("https://www.google.com/search?q=$searchTerm")
             val gSearchIntent = Intent(Intent.ACTION_VIEW, uri)
             activity.startActivity(gSearchIntent)
         }
@@ -348,17 +346,15 @@ class AssistantFunctions {
         fun callContact(activity: Activity, textToSpeech: TextToSpeech, assistantViewModel: AssistantViewModel, keeper: String) {
             var number= ""
             if (ContextCompat.checkSelfPermission(
-                            activity, Manifest.permission.READ_CONTACTS
-                    ) != PERMISSION_GRANTED) {
+                    activity, Manifest.permission.READ_CONTACTS
+                ) != PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(activity,
-                        arrayOf(Manifest.permission.READ_CONTACTS,
-                                Manifest.permission.WRITE_CONTACTS),
-                        READCONTACTS
+                    arrayOf(Manifest.permission.READ_CONTACTS,
+                        Manifest.permission.WRITE_CONTACTS),
+                    READCONTACTS
                 )
             } else {
-                val name = keeper.split("call").toTypedArray()[1].trim {
-                    it <= ' '
-                }
+                val name = keeper.substringAfter("call").trim()
                 try {
                     val phones: Cursor = activity.contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null)!!
                     while (phones.moveToNext()) {
@@ -371,12 +367,12 @@ class AssistantFunctions {
                     phones.close()
 
                     if (number.trim {
-                                it <= ' '
-                            }.isNotEmpty()) {
+                            it <= ' '
+                        }.isNotEmpty()) {
                         if (ContextCompat.checkSelfPermission(activity,
-                                        Manifest.permission.CALL_PHONE) != PERMISSION_GRANTED) {
+                                Manifest.permission.CALL_PHONE) != PERMISSION_GRANTED) {
                             ActivityCompat.requestPermissions(activity,
-                                    arrayOf(Manifest.permission.CALL_PHONE), REQUEST_CALL
+                                arrayOf(Manifest.permission.CALL_PHONE), REQUEST_CALL
                             )
                         } else {
                             val dial = "tel:$number"
@@ -580,8 +576,8 @@ class AssistantFunctions {
             val index = indexes.random()
             speak(questions[index], textToSpeech, assistantViewModel, keeper)
         }
-        }
     }
+}
 
 
 
